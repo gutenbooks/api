@@ -17,6 +17,9 @@ export class Taxon {
   @Column()
   name: string;
 
+  @Column()
+  taxonomyId: number;
+  
   @ManyToOne(type => Taxonomy, taxonomy => taxonomy.taxons)
   taxonomy: Taxonomy;
 

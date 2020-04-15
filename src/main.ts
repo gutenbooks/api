@@ -1,5 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { CrudConfigService } from '@nestjsx/crud';
+
+CrudConfigService.load({
+  routes: {
+    only: [
+      'getManyBase',
+      'getOneBase',
+    ],
+  },
+  query: {
+    limit: 50,
+    maxLimit: 200,
+    alwaysPaginate: true,
+  },
+});
+
 import { AppModule } from './app.module';
 
 async function bootstrap() {

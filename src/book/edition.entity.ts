@@ -7,6 +7,7 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
+import { Exclude } from "class-transformer";
 
 import { Book } from './book.entity';
 import { EditionContribution } from './edition-contribution.entity';
@@ -18,6 +19,10 @@ import { Language } from '../language/language.entity';
 export class Edition {
   @PrimaryGeneratedColumn({type: 'bigint'})
   id: number;
+
+  @Exclude()
+  @Column()
+  bookId: number;
 
   @ManyToOne(type => Book, book => book.editions)
   book: Promise<Book>;
