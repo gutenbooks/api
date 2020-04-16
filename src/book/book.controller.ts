@@ -13,6 +13,9 @@ import { BookService } from './book.service';
       editions: {
         eager: true,
       },
+      'editions.identifiers': {
+        eager: true,
+      },
       contributions: {
         eager: true,
       },
@@ -20,6 +23,12 @@ import { BookService } from './book.service';
         eager: true,
       },
     },
+    sort: [
+      {
+        field: 'editions.downloads',
+        order: 'DESC'
+      },
+    ],
   },
 })
 @Controller('books')

@@ -21,6 +21,7 @@ import {
  Taxonomy,
 } from '../taxonomy';
 
+import { GutenbergHelperService } from './gutenberg-helper.service';
 import { GutenbergService } from './gutenberg.service';
 import { SeedService } from './seed.service';
 
@@ -43,6 +44,7 @@ import { SeedService } from './seed.service';
     ]),
   ],
   providers: [
+    GutenbergHelperService,
     GutenbergService,
     SeedService,
   ],

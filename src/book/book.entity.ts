@@ -21,6 +21,9 @@ export class Book {
   @Column()
   title: string;
 
+  @Column({ type: 'longtext', nullable: true })
+  subtitle: string|null;
+
   @OneToMany(type => BookContribution, contribution => contribution.book)
   contributions: Promise<BookContribution[]>;
 

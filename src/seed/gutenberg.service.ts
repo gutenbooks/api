@@ -29,20 +29,19 @@ import {
  Taxonomy,
 } from '../taxonomy';
 
+import { GutenbergHelperService } from './gutenberg-helper.service';
+
+
 @Injectable()
 @Console({
     name: 'seed:gutenberg',
     description: 'Seed the project DB with Project Gutenberg data',
 })
 export class GutenbergService {
-
-  public static CATALOG_URL = 'http://gutenberg.readingroo.ms/cache/generated/feeds/rdf-files.tar.bz2'
-  public static CATALOG_TEMP_DOWNLOAD = '/tmp/catalog.tar.bz2';
-  public static CATALOG_TEMP_UNPACKED = '/tmp/catalog';
-
   public readonly spinner: any;
 
   constructor(
+    protected readonly gutenbergHelperService: GutenbergHelperService,
     @InjectRepository(BookContribution)
     protected readonly bookContributionRepository: Repository<BookContribution>,
     protected readonly bookRepository: BookRepository,
@@ -71,13 +70,13 @@ export class GutenbergService {
     description: 'Seed the Project Gutenberg data',
   })
   async all(): Promise<void> {
-    this.clean();
+    this.gutenbergHelperService.clean();
 
     await this.download();
     this.cleanStale();
     await this.upsertAll();
 
-    this.clean();
+    this.gutenbergHelperService.clean();
   }
 
   @Command({
@@ -86,13 +85,13 @@ export class GutenbergService {
   })
   async download(): Promise<void> {
     this.spinner.start('Downloading compressed catalog.');
-    await this.getCatalog();
-    this.runCommand('ls', [ '-lh', GutenbergService.CATALOG_TEMP_DOWNLOAD ]);
+    await this.gutenbergHelperService.getCatalog();
+    this.gutenbergHelperService.runCommand('ls', [ '-lh', GutenbergHelperService.CATALOG_TEMP_DOWNLOAD ]);
     this.spinner.succeed('Finished downloading compressed catalog.');
 
     this.spinner.start('Decompressing catalog (this takes some time).');
-    fs.mkdirSync(GutenbergService.CATALOG_TEMP_UNPACKED);
-    this.runCommand('tar', [ 'fjvx',  GutenbergService.CATALOG_TEMP_DOWNLOAD, '-C', GutenbergService.CATALOG_TEMP_UNPACKED ]);
+    fs.mkdirSync(GutenbergHelperService.CATALOG_TEMP_UNPACKED);
+    this.gutenbergHelperService.runCommand('tar', [ 'fjvx',  GutenbergHelperService.CATALOG_TEMP_DOWNLOAD, '-C', GutenbergHelperService.CATALOG_TEMP_UNPACKED ]);
     this.spinner.succeed('Decompressing catalog.');
   }
 
@@ -118,7 +117,7 @@ export class GutenbergService {
     this.spinner.start('Beginning catalog upsert (this may take several minutes).');
 
     const allIds = fs
-      .readdirSync(`${GutenbergService.CATALOG_TEMP_UNPACKED}/cache/epub`)
+      .readdirSync(`${GutenbergHelperService.CATALOG_TEMP_UNPACKED}/cache/epub`)
       .filter((id) => {
         return /^[\d]+$/.test(id);
       })
@@ -133,7 +132,7 @@ export class GutenbergService {
       const mod: number = parseInt(idx, 10) % logRange;
 
       if (mod === 0) {
-        console.log(`Upserting range: ${idx} of ${ids.length}`);
+        console.log(`\nUpserting range of ${ids.length}: ${idx} - ${idx + logRange}`);
       }
 
       try {
@@ -148,7 +147,7 @@ export class GutenbergService {
   }
 
   async upsert(id: number): Promise<void> {
-    const parsed = await this.getBookById(id);
+    const parsed = await this.gutenbergHelperService.getBookById(id);
     const language = await this.languageRepository.findOne({ code: parsed.language });
     let book: Book = await this.bookRepository
       .findOneByIdentifier(
@@ -183,13 +182,16 @@ export class GutenbergService {
     // ///////////////////
     // update book fields
     // ///////////////////
-    book.title = parsed.title;
+    const parsedTitle = this.gutenbergHelperService.parseTitle(parsed.title)
+    book.title = parsedTitle.title;
+    book.subtitle = parsedTitle.subtitle;
     book = await this.bookRepository.save(book);
 
     // ///////////////////
     // update edition fields
     // ///////////////////
-    edition.title = parsed.title;
+    edition.title = parsedTitle.title;
+    edition.subtitle = parsedTitle.subtitle;
     edition.language = language;
     edition.downloads = parseInt(parsed.downloads, 10);
     edition.publishedAt = new Date(parsed.publishedAt);
@@ -310,161 +312,5 @@ export class GutenbergService {
         }
       }
     }
-
-
-
-    // let subjects = await this.taxonomyRepository.findOne({ name: 'Subjects' });
-  }
-
-  async getBookById(id: number): Promise<any> {
-    const object = await this.parseFile(id);
-
-    if (!object) {
-      console.log('Unable to process id ', id);
-      return;
-    }
-
-    const root = object['rdf:RDF'];
-    const ebook = root['pgterms:ebook'][0];
-    const book = {
-      id: id,
-      title: ebook['dcterms:title']? ebook['dcterms:title'][0] : undefined,
-      type: ebook['dcterms:type'] ? ebook['dcterms:type'][0]['rdf:Description'][0]['rdf:value'][0] : undefined,
-      language: ebook['dcterms:language'][0]['rdf:Description'][0]['rdf:value'][0]['_'],
-      publishedAt: ebook['dcterms:issued'][0]['_'],
-      downloads: ebook['pgterms:downloads'][0]['_'],
-      publisher: ebook['dcterms:publisher'][0],
-      authors: [],
-      subjects: [],
-      formats: [],
-      bookshelves: [],
-      copyright: null,
-    };
-
-    // ///////////////
-    // authors
-    // ///////////////
-    if (ebook['dcterms:creator']) {
-      for (const creator of ebook['dcterms:creator']) {
-        const c = creator['pgterms:agent'][0];
-        const author: any = {
-          birth: c['pgterms:birthdate'] ? c['pgterms:birthdate'][0]['_'] : undefined,
-          death: c['pgterms:deathdate'] ? c['pgterms:deathdate'][0]['_'] : undefined,
-          webpage: c['pgterms:webpage'] ? c['pgterms:webpage'][0]['$']['rdf:resource'] : undefined,
-          name: c['pgterms:name'] ? c['pgterms:name'][0] : undefined,
-        };
-
-        book.authors.push(author);
-      }
-    }
-
-    // ///////////////
-    // subjects
-    // ///////////////
-    if (ebook['dcterms:subject']) {
-      for (const subject of ebook['dcterms:subject']) {
-        const s = subject['rdf:Description'][0];
-        const isLCSH = s['dcam:memberOf'].some((m) => /^.*LCSH$/.test(m['$']['rdf:resource']));
-
-        if (isLCSH) {
-          book.subjects.push(s['rdf:value'][0]);
-        }
-      }
-
-      book.subjects.sort();
-    }
-
-    // ///////////////
-    // bookshelves
-    // ///////////////
-    if (ebook['pgterms:bookshelf']) {
-      for (const shelf of ebook['pgterms:bookshelf']) {
-        const s = shelf['rdf:Description'][0];
-        book.bookshelves.push(s['rdf:value'][0]);
-      }
-
-      book.bookshelves.sort();
-    }
-
-    // ///////////////
-    // copyright
-    // ///////////////
-    const rights = ebook['dcterms:rights'][0];
-    if (rights.startsWith('Public domain in the USA.')) {
-      book.copyright = false;
-    } else if (rights.startsWith('Copyrighted.')) {
-      book.copyright = true;
-    }
-
-    // ///////////////
-    // formats
-    // ///////////////
-    const includeTypes = [
-      'application/x-mobipocket-ebook',
-      'application/epub+zip',
-      'text/html',
-      'text/plain',
-      'text/plain; charset=us-ascii',
-    ];
-    for (const format of ebook['dcterms:hasFormat']) {
-      const f = format['pgterms:file'][0];
-      const type = f['dcterms:format'][0]['rdf:Description'][0]['rdf:value'][0]['_'];
-
-      if (includeTypes.includes(type)) {
-        const file = f['$']['rdf:about'];
-        book.formats.push({
-          file,
-          description: /^.*\.images$/.test(file) ? 'Images' : null,
-          type,
-          modifiedAt: f['dcterms:modified'][0]['_'],
-        });
-      }
-    }
-
-    return book;
-  }
-
-  runCommand(command: string, args: any) {
-    const cmd = spawnSync(
-      command,
-      args,
-    );
-
-    console.error(`stderr: ${cmd.stderr.toString()}` );
-    console.log(`stdout: ${cmd.stdout.toString()}` );
-  }
-
-  clean() {
-    if (fs.existsSync(GutenbergService.CATALOG_TEMP_DOWNLOAD)) {
-      fs.unlinkSync(GutenbergService.CATALOG_TEMP_DOWNLOAD);
-    }
-
-    if (fs.existsSync(GutenbergService.CATALOG_TEMP_UNPACKED)) {
-      fs.rmdirSync(GutenbergService.CATALOG_TEMP_UNPACKED);
-    }
-  }
-
-
-  async getCatalog(
-    url: string = GutenbergService.CATALOG_URL,
-    filePath: string = GutenbergService.CATALOG_TEMP_DOWNLOAD,
-  ): Promise<void> {
-    const file = fs.createWriteStream(filePath);
-    return new Promise((resolve, reject) => {
-      http.get(url, (resp) => {
-        resp.on('data', (data) => {
-          file.write(data);
-        }).on('end', () => {
-          file.end();
-          resolve();
-        });
-      });
-    });
-  }
-
-  async parseFile(id: string|number): Promise<any> {
-    const path: string = `${GutenbergService.CATALOG_TEMP_UNPACKED}/cache/epub/${id}/pg${id}.rdf`;
-    const data: any = fs.readFileSync(path, 'utf8');
-    return await parseStringPromise(data);
   }
 }

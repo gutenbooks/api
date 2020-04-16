@@ -30,8 +30,8 @@ export class Edition {
   @Column()
   title: string;
 
-  @Column({ nullable: true })
-  subtitle?: string;
+  @Column({ type: 'longtext', nullable: true })
+  subtitle: string|null;
 
   @ManyToOne(type => Language, { eager: true })
   language: Language;
