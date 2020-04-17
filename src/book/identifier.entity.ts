@@ -29,7 +29,9 @@ export class Identifier {
   @Column()
   value: string;
 
-  @ManyToOne(type => Edition, edition => edition.identifiers)
+  @ManyToOne(type => Edition, edition => edition.identifiers, {
+    onDelete: 'CASCADE',
+  })
   edition: Promise<Edition>;
 
   @Column()

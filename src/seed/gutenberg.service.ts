@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In, getConnection } from 'typeorm';
 import { Console, Command, createSpinner } from 'nestjs-console';
 import * as http from 'http';
 import * as fs from 'fs';
@@ -295,10 +295,8 @@ export class GutenbergService {
         const bookWithTaxon = await this.bookRepository
           .createQueryBuilder('book')
           .leftJoinAndSelect('book.taxons', 'taxon')
-          .where(
-            `book.id = :id AND taxon.id = :taxonId`,
-            { id: book.id, taxonId: taxon.id },
-          )
+          .where(`book.id = :id`, { id: book.id })
+          .andWhere(`taxon.id = :taxonId`, { taxonId: taxon.id })
           .getOne()
         ;
 
@@ -312,5 +310,49 @@ export class GutenbergService {
         }
       }
     }
+  }
+
+  @Command({
+    command: 'merge',
+    description: 'Merge any duplicate books together',
+  })
+  async merge(): Promise<void> {
+    this.spinner.start('Beginning book merge.');
+    const duplicates = await this.bookRepository.findDuplicates();
+    console.log(duplicates);
+    const bookMap = {};
+
+    for (const duplicate of duplicates) {
+      await this.mergeBooks(duplicate.ids);
+    }
+
+    this.spinner.succeed('Finished book merge.');
+  }
+
+  async mergeBooks(ids: number[]) {
+    const books = await this.bookRepository.find({
+      id: In(ids),
+    });
+    const primary = books.shift();
+    const ops = [];
+    for(const book of books) {
+      const editions = await this.editionRepository.find({ bookId: book.id });
+      console.log(editions);
+      for (const edition of editions) {
+        await getConnection()
+          .createQueryBuilder()
+          .relation(Edition, 'book')
+          .of(edition.id) // you can use just post id as well
+          .set(primary.id)
+        ;
+      }
+    }
+
+    // this.editionRepository.save(primary);
+    this.bookRepository.createQueryBuilder('books')
+      .delete()
+      .where("book.id IN (:...ids)", { ids: books.map(book => book.id) })
+      .execute()
+    ;
   }
 }

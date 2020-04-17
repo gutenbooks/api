@@ -34,7 +34,12 @@ export class Format {
   @Column({ nullable: true })
   description?: string;
 
-  @ManyToOne(type => Edition, edition => edition.formats)
+  @Column()
+  editionId: number;
+
+  @ManyToOne(type => Edition, edition => edition.formats, {
+    onDelete: 'CASCADE',
+  })
   edition: Edition;
 
   @CreateDateColumn()

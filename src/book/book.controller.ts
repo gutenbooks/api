@@ -16,6 +16,9 @@ import { BookService } from './book.service';
       'editions.identifiers': {
         eager: true,
       },
+      'editions.formats': {
+        eager: true,
+      },
       contributions: {
         eager: true,
       },

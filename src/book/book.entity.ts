@@ -27,7 +27,7 @@ export class Book {
   @OneToMany(type => BookContribution, contribution => contribution.book)
   contributions: Promise<BookContribution[]>;
 
-  @OneToMany(type => Edition, edition => edition.book, { eager: true })
+  @OneToMany(type => Edition, edition => edition.book)
   editions: Edition[];
 
   @ManyToMany(type => Taxon)

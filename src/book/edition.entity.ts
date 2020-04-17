@@ -39,13 +39,19 @@ export class Edition {
   @Column()
   downloads: number;
 
-  @OneToMany(type => EditionContribution, contribution => contribution.edition)
+  @OneToMany(type => EditionContribution, contribution => contribution.edition, {
+    onDelete: 'CASCADE',
+  })
   contributions: Promise<EditionContribution[]>;
 
-  @OneToMany(type => Format, format => format.edition, { eager: true })
+  @OneToMany(type => Format, format => format.edition, {
+    eager: true,
+  })
   formats: Format[];
 
-  @OneToMany(type => Identifier, identifier => identifier.edition, { eager: true })
+  @OneToMany(type => Identifier, identifier => identifier.edition, {
+    eager: true,
+  })
   identifiers: Identifier[];
 
   @Column()
