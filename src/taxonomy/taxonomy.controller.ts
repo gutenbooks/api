@@ -14,6 +14,12 @@ import { TaxonomyService } from './taxonomy.service';
         eager: true,
       },
     },
+    sort: [
+      {
+        field: 'taxons.name',
+        order: 'ASC',
+      },
+    ],
   },
 })
 @Controller('taxonomies')

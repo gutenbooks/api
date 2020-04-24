@@ -5,6 +5,8 @@ import { Taxon } from './taxon.entity';
 import { Taxonomy } from './taxonomy.entity';
 import { TaxonomyService } from './taxonomy.service';
 import { TaxonomyController } from './taxonomy.controller';
+import { TaxonService } from './taxon.service';
+import { TaxonController } from './taxon.controller';
 
 @Module({
   imports: [
@@ -14,6 +16,7 @@ import { TaxonomyController } from './taxonomy.controller';
     ]),
   ],
   providers: [
+    TaxonService,
     TaxonomyService,
   ],
   exports: [
@@ -21,6 +24,7 @@ import { TaxonomyController } from './taxonomy.controller';
     TaxonomyService,
   ],
   controllers: [
+    TaxonController,
     TaxonomyController,
   ],
 })

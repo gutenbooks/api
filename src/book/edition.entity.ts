@@ -33,6 +33,9 @@ export class Edition {
   @Column({ type: 'longtext', nullable: true })
   subtitle: string|null;
 
+  @Column()
+  languageId: number;
+
   @ManyToOne(type => Language, { eager: true })
   language: Language;
 

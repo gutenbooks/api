@@ -24,8 +24,8 @@ export class Book {
   @Column({ type: 'longtext', nullable: true })
   subtitle: string|null;
 
-  @OneToMany(type => BookContribution, contribution => contribution.book)
-  contributions: Promise<BookContribution[]>;
+  @OneToMany(type => BookContribution, contribution => contribution.book, { eager: true })
+  contributions: BookContribution[];
 
   @OneToMany(type => Edition, edition => edition.book)
   editions: Edition[];

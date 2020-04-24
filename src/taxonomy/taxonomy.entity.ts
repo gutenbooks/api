@@ -17,8 +17,8 @@ export class Taxonomy {
   @Column()
   name: string;
 
-  @OneToMany(type => Taxon, taxon => taxon.taxonomy)
-  taxons: Promise<Taxon[]>;
+  @OneToMany(type => Taxon, taxon => taxon.taxonomy, { eager: true })
+  taxons: Taxon[];
 
   @CreateDateColumn()
   createdAt: Date;

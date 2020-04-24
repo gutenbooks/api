@@ -2,10 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, getConnection } from 'typeorm';
 import { Console, Command, createSpinner } from 'nestjs-console';
-import * as http from 'http';
 import * as fs from 'fs';
 import { spawnSync } from 'child_process';
-import { parseStringPromise } from 'xml2js';
 
 import {
  BookContribution,
@@ -75,6 +73,7 @@ export class GutenbergService {
     await this.download();
     this.cleanStale();
     await this.upsertAll();
+    await this.merge();
 
     this.gutenbergHelperService.clean();
   }
@@ -259,7 +258,7 @@ export class GutenbergService {
       if (!contribution) {
         contribution = new BookContribution();
         contribution.type = ContributionType.AUTHOR;
-        contribution.book = book;
+        contribution.bookId = book.id;
         contribution.contributor = contributor;
         contribution.priority = 0;
         contribution = await this.bookContributionRepository.save(contribution);

@@ -14,8 +14,7 @@ export class BookContribution extends Contribution {
   bookId: number;
 
   @ManyToOne(type => Book, book => book.contributions, {
-    eager: true,
     onDelete: 'CASCADE',
   })
-  book: Book;
+  book: Promise<Book>;
 }

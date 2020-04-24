@@ -3,25 +3,10 @@ import { Repository } from 'typeorm';
 import { Console, Command, createSpinner } from 'nestjs-console';
 
 import { languages } from './languages.seed';
-
-import {
- BookContribution,
- Book,
- Contributor,
- EditionContribution,
- Edition,
- Format,
- Identifier,
-} from '../book';
-
+import { GutenbergService } from './gutenberg.service';
 import {
   Language,
 } from '../language';
-
-import {
- Taxon,
- Taxonomy,
-} from '../taxonomy';
 
 @Console({
     name: 'seed',
@@ -32,26 +17,9 @@ export class SeedService {
   public readonly spinner: any;
 
   constructor(
-    @InjectRepository(BookContribution)
-    protected readonly bookContributionRepository: Repository<BookContribution>,
-    @InjectRepository(Book)
-    protected readonly bookRepository: Repository<Book>,
-    @InjectRepository(Contributor)
-    protected readonly contributorRepository: Repository<Contributor>,
-    @InjectRepository(EditionContribution)
-    protected readonly editionContributionRepository: Repository<EditionContribution>,
-    @InjectRepository(Edition)
-    protected readonly editionRepository: Repository<Edition>,
-    @InjectRepository(Format)
-    protected readonly formatRepository: Repository<Format>,
-    @InjectRepository(Identifier)
-    protected readonly identifierRepository: Repository<Identifier>,
+    protected readonly gutenbergService: GutenbergService,
     @InjectRepository(Language)
     protected readonly languageRepository: Repository<Language>,
-    @InjectRepository(Taxon)
-    protected readonly taxonRepository: Repository<Taxon>,
-    @InjectRepository(Taxonomy)
-    protected readonly taxonomyRepository: Repository<Taxonomy>,
   ) {
     this.spinner = createSpinner();
   }
@@ -63,6 +31,7 @@ export class SeedService {
   async all(): Promise<void> {
     this.spinner.start(`full seed has begun`);
     await this.language();
+    await this.gutenbergService.all();
     this.spinner.succeed(`full seed has finished`);
   }
 

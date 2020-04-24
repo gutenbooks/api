@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, HttpModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import {
@@ -21,12 +21,14 @@ import {
  Taxonomy,
 } from '../taxonomy';
 
+import { GoodreadsService } from './goodreads.service';
 import { GutenbergHelperService } from './gutenberg-helper.service';
 import { GutenbergService } from './gutenberg.service';
 import { SeedService } from './seed.service';
 
 @Module({
   imports: [
+    HttpModule,
     TypeOrmModule.forFeature([
       BookContribution,
       Book,
@@ -44,6 +46,7 @@ import { SeedService } from './seed.service';
     ]),
   ],
   providers: [
+    GoodreadsService,
     GutenbergHelperService,
     GutenbergService,
     SeedService,
