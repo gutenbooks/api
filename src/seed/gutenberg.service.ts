@@ -113,7 +113,7 @@ export class GutenbergService {
     description: 'Upsert the decompressed catalog into the database',
   })
   async upsertAll(): Promise<void> {
-    this.spinner.start('Beginning catalog upsert (this may take several minutes).');
+    const spinner = this.spinner.start('Beginning catalog upsert (this may take several minutes).');
 
     const allIds = fs
       .readdirSync(`${GutenbergHelperService.CATALOG_TEMP_UNPACKED}/cache/epub`)
@@ -125,19 +125,13 @@ export class GutenbergService {
     const ids: number[] = allIds.map((id) => parseInt(id, 10));
     ids.sort((a: number, b: number) => a - b);
 
-    const logRange: number = 1000;
     for (const idx in ids) {
+      spinner.text = `Upserting ${idx} of ${ids.length}`;
       const id: number = ids[idx];
-      const mod: number = parseInt(idx, 10) % logRange;
-
-      if (mod === 0) {
-        console.log(`\nUpserting range of ${ids.length}: ${idx} - ${idx + logRange}`);
-      }
-
       try {
         await this.upsert(id);
       } catch (err) {
-        console.error(`error processing id ${id}`, err);
+        console.error(`\nError processing id ${id}`, err);
       }
 
     }
