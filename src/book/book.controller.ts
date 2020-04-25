@@ -19,8 +19,13 @@ import { BookService } from './book.service';
       editions: {
         eager: true,
       },
+      identifiers: {
+        eager: true,
+        alias: 'bookIdentifiers',
+      },
       'editions.identifiers': {
         eager: true,
+        alias: 'editionIdentifiers',
       },
       'editions.formats': {
         eager: true,

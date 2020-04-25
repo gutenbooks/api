@@ -1,14 +1,25 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { Book } from './book.entity';
-import { IdentifierType } from './identifier.entity';
+import { IdentifierType, IdentifierSource } from './identifier.entity';
 
 @EntityRepository(Book)
 export class BookRepository extends Repository<Book> {
 
-  findOneByIdentifier(type: IdentifierType, id: string): Promise<Book> {
+  findOneByBookIdentifier(source: IdentifierSource, type: IdentifierType, id: string): Promise<Book> {
+    return this.createQueryBuilder('book')
+      .leftJoinAndSelect('book.identifiers', 'identifier')
+      .where('identifier.source = :source', { source })
+      .where('identifier.type = :type', { type })
+      .andWhere('identifier.value = :id', { id })
+      .getOne()
+    ;
+  }
+
+  findOneByEditionIdentifier(source: IdentifierSource, type: IdentifierType, id: string): Promise<Book> {
     return this.createQueryBuilder('book')
       .leftJoinAndSelect('book.editions', 'edition')
       .leftJoinAndSelect('edition.identifiers', 'identifier')
+      .where('identifier.source = :source', { source })
       .where('identifier.type = :type', { type })
       .andWhere('identifier.value = :id', { id })
       .getOne()
@@ -30,7 +41,7 @@ export class BookRepository extends Repository<Book> {
     if (isExact) {
       // we also need to group by subtitle as some authors have many
       // works with the same title, but different subtitles.
-      // ex. 
+      // ex.
       //   - Viajes Por Filipinas : De Manila A Marianas
       //   - Viajes Por Filipinas : De Manila A Tayabas
       query

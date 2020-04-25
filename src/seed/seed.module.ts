@@ -10,6 +10,8 @@ import {
  Edition,
  Format,
  Identifier,
+ BookIdentifier,
+ EditionIdentifier,
 } from '../book';
 
 import {
@@ -38,6 +40,8 @@ import { SeedService } from './seed.service';
       Edition,
       Format,
       Identifier,
+      BookIdentifier,
+      EditionIdentifier,
 
       Language,
 

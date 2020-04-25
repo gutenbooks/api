@@ -16,6 +16,9 @@ import {
  Format,
  Identifier,
  IdentifierType,
+ IdentifierSource,
+ BookIdentifier,
+ EditionIdentifier,
 } from '../book';
 
 import {
@@ -53,6 +56,10 @@ export class GutenbergService {
     protected readonly formatRepository: Repository<Format>,
     @InjectRepository(Identifier)
     protected readonly identifierRepository: Repository<Identifier>,
+    @InjectRepository(BookIdentifier)
+    protected readonly bookIdentifierRepository: Repository<BookIdentifier>,
+    @InjectRepository(EditionIdentifier)
+    protected readonly editionIdentifierRepository: Repository<EditionIdentifier>,
     @InjectRepository(Language)
     protected readonly languageRepository: Repository<Language>,
     @InjectRepository(Taxon)
@@ -143,8 +150,9 @@ export class GutenbergService {
     const parsed = await this.gutenbergHelperService.getBookById(id);
     const language = await this.languageRepository.findOne({ code: parsed.language });
     let book: Book = await this.bookRepository
-      .findOneByIdentifier(
-        IdentifierType.GUTENBERG,
+      .findOneByEditionIdentifier(
+        IdentifierSource.GUTENBERG,
+        IdentifierType.INTERNAL,
         parsed.id.toString()
       )
     ;
@@ -157,10 +165,11 @@ export class GutenbergService {
       book = new Book();
       edition = new Edition();
       edition.formats = [];
-      identifier = new Identifier();
+      identifier = new EditionIdentifier();
     } else {
-      identifier = await this.identifierRepository.findOne({
-        type: IdentifierType.GUTENBERG,
+      identifier = await this.editionIdentifierRepository.findOne({
+        source: IdentifierSource.GUTENBERG,
+        type: IdentifierType.INTERNAL,
         value: parsed.id.toString(),
       });
 
@@ -223,10 +232,11 @@ export class GutenbergService {
     // ///////////////////
     // update identifier fields
     // ///////////////////
-    identifier.name = IdentifierType.GUTENBERG;
+    identifier.name = IdentifierSource.GUTENBERG;
+    identifier.type = IdentifierType.INTERNAL;
     identifier.value = parsed.id.toString();
     identifier.edition = edition;
-    identifier = await this.identifierRepository.save(identifier);
+    identifier = await this.editionIdentifierRepository.save(identifier);
 
     // ///////////////////
     // update contributors

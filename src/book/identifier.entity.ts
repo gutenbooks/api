@@ -1,6 +1,8 @@
 import {
   Entity,
   Column,
+  Unique,
+  TableInheritance,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
@@ -9,16 +11,32 @@ import {
 
 import { Edition } from './edition.entity';
 
-export enum IdentifierType {
+export enum IdentifierSource {
     GUTENBERG = 'project_gutenberg',
     GOODREADS = 'goodreads',
+    GLOBAL = 'global',
+}
+
+export enum IdentifierType {
     ISBN = 'isbn',
+    ISBN13 = 'isbn13',
+    INTERNAL = 'internal',
 }
 
 @Entity()
+@Unique([ 'entity_type', 'source', 'type', 'value'])
+@TableInheritance({
+  column: { type: 'varchar', name: 'entity_type' }
+})
 export class Identifier {
   @PrimaryGeneratedColumn({type: 'bigint'})
   id: number;
+
+  @Column({
+      type: 'enum',
+      enum: IdentifierSource,
+  })
+  source: IdentifierSource;
 
   @Column({
       type: 'enum',
@@ -28,14 +46,6 @@ export class Identifier {
 
   @Column()
   value: string;
-
-  @ManyToOne(type => Edition, edition => edition.identifiers, {
-    onDelete: 'CASCADE',
-  })
-  edition: Promise<Edition>;
-
-  @Column()
-  editionId: number;
 
   @CreateDateColumn()
   createdAt: Date;
