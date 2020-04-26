@@ -75,8 +75,6 @@ export class GoodreadsService {
     description: 'Seed the Goodreads data',
   })
   async all(): Promise<void> {
-    const spinner = this.spinner.start('Beginning Goodreads seed.');
-
     if (!process.env.GOODREADS_API_KEY) {
       this.spinner.fail('You must set your GOODREADS_API_KEY env variable.');
       return;
@@ -84,6 +82,27 @@ export class GoodreadsService {
 
     const pageSize = 500;
     const count: number = await this.bookRepository.count();
+
+    console.log(`
+      \n\n\n
+      *******************************
+      *     Goodreads Data Seed     *
+      *******************************
+
+      You are beginning the Goodreads data seed. This process will make
+      one API call to Goodreads per second. Each book requires one API call.
+      This means that it will take quite some time for the seed to finish.
+
+      Please be aware that making a large amount of requests to the Goodreads
+      API you may run the risk of your API Key being denied access. Please read
+      their API Guidelines and proceed at your own risk.
+
+      ESTIMATE
+      - records: ${count}
+      - hours: ${count / 60 / 60}
+      \n\n\n
+    `);
+    const spinner = this.spinner.start('Beginning Goodreads seed.');
 
     for (let i = 1; i <= Math.ceil(count / pageSize); i++) {
       const books: Book[] = await this.bookRepository
