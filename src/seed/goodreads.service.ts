@@ -99,7 +99,7 @@ export class GoodreadsService {
 
       ESTIMATE
       - records: ${count}
-      - hours: ${count / 60 / 60}
+      - time: ${(count / 60 / 60).toFixed(0)}hrs ${(((count / 60 / 60) % 1) * 60).toFixed(0)}min
       \n\n\n
     `);
     const spinner = this.spinner.start('Beginning Goodreads seed.');
@@ -165,7 +165,7 @@ export class GoodreadsService {
           .update(Book)
           .set({
             description: description || '',
-            rating: parseFloat(rating),
+            rating: rating,
           })
           .where('id = :id', { id: book.id })
           .execute()

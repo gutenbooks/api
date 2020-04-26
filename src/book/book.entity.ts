@@ -28,8 +28,13 @@ export class Book {
   @Column({ type: 'longtext', default: '' })
   description: string;
 
-  @Column({ type: 'decimal', nullable: true })
-  rating: number;
+  @Column({
+    type: 'decimal',
+    precision: 3,
+    scale: 2,
+    nullable: true,
+  })
+  rating: string;
 
   @OneToMany(type => BookContribution, contribution => contribution.book, { eager: true })
   contributions: BookContribution[];
