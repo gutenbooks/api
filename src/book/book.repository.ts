@@ -45,7 +45,6 @@ export class BookRepository extends Repository<Book> {
       //   - Viajes Por Filipinas : De Manila A Marianas
       //   - Viajes Por Filipinas : De Manila A Tayabas
       query
-        .andWhere('book.subtitle = book.subtitle')
         .addGroupBy('book.subtitle')
       ;
 
