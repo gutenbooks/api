@@ -110,6 +110,8 @@ export class GoodreadsService {
         .leftJoinAndSelect('books.identifiers', 'identifier')
         .leftJoinAndSelect('books.contributions', 'contribution')
         .leftJoinAndSelect('contribution.contributor', 'contributor')
+        .leftJoinAndSelect('books.editions', 'edition')
+        .orderBy('edition.downloads', 'DESC')
         .skip(((i - 1) * pageSize))
         .take(pageSize)
         .getMany()
@@ -214,6 +216,7 @@ export class GoodreadsService {
       const workId = work.id[0]['_'];
       const ratingsDist = work.rating_dist[0];
       const rating = this.calculateRating(ratingsDist);
+
       return {
         isbn,
         isbn13,
@@ -251,8 +254,12 @@ export class GoodreadsService {
     const one = (1 * parseInt(parsed[5], 10));
     const total = parseInt(parsed[6], 10);
 
-    const avg = (five + four + three + two + one) / total;
+    // don't divide by zero
+    if (total === 0) {
+      return null;
+    }
 
+    const avg = (five + four + three + two + one) / total;
     return avg.toFixed(2);
   }
 
