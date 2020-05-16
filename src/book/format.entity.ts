@@ -49,7 +49,8 @@ export class Format {
   updatedAt: Date;
 
   public static formatFromMime(mime: string): FormatType {
-    switch(mime) {
+    const m = mime.split(';')[0];
+    switch(m) {
       case 'application/x-mobipocket-ebook':
         return FormatType.KINDLE;
       case 'application/epub+zip':
@@ -57,8 +58,6 @@ export class Format {
       case 'text/html':
         return FormatType.HTML;
       case 'text/plain':
-        return FormatType.PLAIN_TEXT;
-      case 'text/plain; charset=us-ascii':
         return FormatType.PLAIN_TEXT;
     }
 

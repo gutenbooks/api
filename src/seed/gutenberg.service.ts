@@ -92,7 +92,6 @@ export class GutenbergService {
   async download(): Promise<void> {
     this.spinner.start('Downloading compressed catalog.');
     await this.gutenbergHelperService.getCatalog();
-    this.gutenbergHelperService.runCommand('ls', [ '-lh', GutenbergHelperService.CATALOG_TEMP_DOWNLOAD ]);
     this.spinner.succeed('Finished downloading compressed catalog.');
 
     this.spinner.start('Decompressing catalog (this takes some time).');
@@ -345,13 +344,12 @@ export class GutenbergService {
         await getConnection()
           .createQueryBuilder()
           .relation(Edition, 'book')
-          .of(edition.id) // you can use just post id as well
+          .of(edition.id)
           .set(primary.id)
         ;
       }
     }
 
-    // this.editionRepository.save(primary);
     this.bookRepository.createQueryBuilder('books')
       .delete()
       .where("book.id IN (:...ids)", { ids: books.map(book => book.id) })

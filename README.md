@@ -49,4 +49,4 @@ Commands:
   help [command]  display help for command
 ```
 
-Note that `npm run console seed all` will execute all the data seed tasks **with the exception** of the Goodreads seed. Goodreads data must be seeded individually.
+Note that `npm run console seed all` will execute all the data seed tasks **with the exception** of the Goodreads seed. Goodreads data must be seeded individually. Additionally, before seeding Goodreads data be sure that you've configured the `GOODREADS_API_KEY` env variable.

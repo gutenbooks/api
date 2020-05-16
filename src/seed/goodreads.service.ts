@@ -173,9 +173,9 @@ export class GoodreadsService {
           .execute()
         ;
       }
-
-      this.spinner.succeed('Finished Goodreads seed.');
     }
+
+    this.spinner.succeed('Finished Goodreads seed.');
   }
 
   /**
