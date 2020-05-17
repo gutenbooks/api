@@ -1,0 +1,28 @@
+image: docker:19.03.8
+
+services:
+  - docker:19.03.8-dind
+
+variables:
+  # Use TLS https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#tls-enabled
+  DOCKER_HOST: tcp://docker:2376
+  DOCKER_TLS_CERTDIR: "/certs"
+
+stages:
+  - build
+
+build:
+  stage: build
+  script:
+    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD
+    - docker pull $DOCKER_REGISTRY_IMAGE:latest || true
+    - docker build --cache-from $DOCKER_REGISTRY_IMAGE:latest --tag $DOCKER_REGISTRY_IMAGE:$CI_COMMIT_TAG --tag $DOCKER_REGISTRY_IMAGE:latest .
+    - docker push $DOCKER_REGISTRY_IMAGE:$CI_COMMIT_TAG
+    - docker push $DOCKER_REGISTRY_IMAGE:latest
+  variables:
+    DOCKER_REGISTRY_IMAGE: gutenbooks/api
+  only:
+    refs:
+      - master
+    variables:
+      - $CI_COMMIT_TAG != null && $CI_COMMIT_TAG != ''
