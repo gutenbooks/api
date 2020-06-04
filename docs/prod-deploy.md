@@ -1,4 +1,4 @@
-# Production Deployment on Ubuntu 18
+# Production Deployment on Ubuntu 20
 
 1. Install Docker:
 
